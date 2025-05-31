@@ -1,0 +1,21 @@
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore model checkpoints and cached data
+*.pt
+*.pth
+__pycache__/
+*.log
+
+# Optional: ignore training data
+magnus_finetune_for_bert.jsonl
+move_vocab.json
+
+# Ignore training data and models
+*.jsonlbranchbrahc
+*.safetensors
+*.pth
+*.pkl
+checkpoints/
+__pycache__/

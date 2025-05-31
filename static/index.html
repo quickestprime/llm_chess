@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Play MagnusBot</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+  <style>
+    body { padding: 30px; font-family: sans-serif; }
+    #board { width: 400px; margin: auto; }
+  </style>
+</head>
+<body>
+  <h2 align="center">Play against MagnusBot (BERT)</h2>
+  <div id="board"></div>
+  <script>
+    const board = Chessboard('board', {
+      draggable: true,
+      position: 'start',
+      onDrop: async (source, target, piece, newPos, oldPos, orientation) => {
+        const move = game.move({ from: source, to: target, promotion: 'q' });
+        if (move === null) return 'snapback';
+
+        board.position(game.fen());
+
+        const response = await fetch('/move', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fen: game.fen() })
+        });
+        const result = await response.json();
+
+        if (result.move) {
+          game.move(result.move);
+          board.position(game.fen());
+        } else {
+          alert("Bot has no legal move!");
+        }
+      }
+    });
+
+    const game = new Chess();
+  </script>
+</body>
+</html>

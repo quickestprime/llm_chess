@@ -3,7 +3,7 @@
 # Variables - replace these with your info
 KEY_PATH="$HOME/.ssh/aws-ec2-keys.pem"
 USER="ubuntu"
-EC2_IP="your.ec2.public.ip"
+EC2_IP="52.64.161.84"
 REMOTE_DIR="/home/$USER/bert_training"
 
 # Files to copy

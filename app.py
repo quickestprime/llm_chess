@@ -13,8 +13,8 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Load model + tokenizer + move vocab
-tokenizer = BertTokenizerFast.from_pretrained("./bert_chess_model")
-model = BertForSequenceClassification.from_pretrained("./bert_chess_model")
+tokenizer = DistilBertTokenizerFast.from_pretrained("./bert_chess_model")
+model = DistilBertForSequenceClassification.from_pretrained("./bert_chess_model")
 model.eval()
 
 with open("move_vocab.json") as f:

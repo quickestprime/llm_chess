@@ -9,14 +9,17 @@ import os
 # --- Dataset class ---
 
 class ChessMoveDataset(Dataset):
-    def __init__(self, jsonl_path, move_vocab_path, tokenizer, max_length=128):
+    def __init__(self, jsonl_path, move_vocab_path, tokenizer, max_length=128, max_samples=1000):
         self.samples = []
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.max_samples = max_samples
 
         # Load samples from jsonl
         with open(jsonl_path, "r") as f:
-            for line in f:
+            for idx, line in enumerate(f):
+                if idx == self.max_samples:
+                    break
                 sample = json.loads(line)
                 self.samples.append(sample)
 
@@ -71,7 +74,7 @@ def train(args):
     
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
     
-    dataset = ChessMoveDataset(args.data_path, args.move_vocab_path, tokenizer)
+    dataset = ChessMoveDataset(args.data_path, args.move_vocab_path, tokenizer, max_samples = args.max_samples)
     print(f'Dataset loaded with {len(dataset)} samples and vocab size {dataset.vocab_size}')
     dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     model = DistilBertForSequenceClassification.from_pretrained(
@@ -82,7 +85,7 @@ def train(args):
     
     
     print('Base model loaded.')
-    print('Model details:',model)
+
     for param in model.distilbert.parameters():
         param.requires_grad = False
 
@@ -137,6 +140,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--lr", type=float, default=5e-5)
+    parser.add_argument("--max_samples", type=int, default=1000, help="Maximum number of training samples to use")
     args = parser.parse_args()
 
     train(args)

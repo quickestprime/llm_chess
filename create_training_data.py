@@ -2,24 +2,42 @@ import chess.pgn
 import json
 
 input_pgn_path = "Carlsen.pgn"
-output_jsonl_path = "magnus_finetune_for_bert.jsonl"
-move_vocab_path = "move_vocab.json"
+output_jsonl_path = "chess_finetune_simple.jsonl"
 
-# Load existing move_vocab from file
-with open(move_vocab_path, "r", encoding="utf-8") as f:
-    move_vocab = json.load(f)
+def get_piece_index(move, board):
+    """
+    Encode the moving piece as an index from 0–15:
+    file (0–7) × piece type (0–1):
+    0 = Rook, 1 = Knight, 2 = Bishop, 3 = Queen, 4 = King, 5 = Pawn
+    => piece_type_idx × 8 + file
+    """
+    from_square = move.from_square
+    file = chess.square_file(from_square)
+    piece = board.piece_at(from_square)
+    
+    if piece is None:
+        return None  # Shouldn't happen
 
-# Reverse lookup: move string → index is move_vocab already, 
-# but we want to keep track of highest index used in case needed
-# (not strictly needed if you only want to use existing vocab)
-max_index = max(move_vocab.values()) if move_vocab else -1
+    type_order = {
+        chess.ROOK: 0,
+        chess.KNIGHT: 1,
+        chess.BISHOP: 2,
+        chess.QUEEN: 3,
+        chess.KING: 4,
+        chess.PAWN: 5
+    }
 
-def get_move_index(move_str):
-    # Instead of adding new moves, just lookup existing vocab
-    # If move_str not found, raise error or skip sample to avoid misalignment
-    if move_str not in move_vocab:
-        raise ValueError(f"Move '{move_str}' not found in move_vocab.json")
-    return move_vocab[move_str]
+    type_idx = type_order.get(piece.piece_type)
+    if type_idx is None:
+        return None
+
+    return type_idx * 8 + file  # 0–47
+
+def get_square_index(move):
+    """
+    Encode destination square as 0–63: a1 = 0, b1 = 1, ..., h8 = 63
+    """
+    return move.to_square
 
 samples = []
 
@@ -31,7 +49,6 @@ with open(input_pgn_path, "r", encoding="utf-8") as pgn_file:
 
         board = game.board()
         node = game
-
         white = game.headers.get("White", "")
         black = game.headers.get("Black", "")
 
@@ -42,31 +59,24 @@ with open(input_pgn_path, "r", encoding="utf-8") as pgn_file:
 
             if "Carlsen" in player_name:
                 fen_before = board.fen()
-                board.push(move)
 
-                move_str = move.uci()
-                try:
-                    move_idx = get_move_index(move_str)
-                except ValueError:
-                    # Skip moves not in vocab to avoid misalignment
-                    node = next_node
-                    continue
+                piece_idx = get_piece_index(move, board)
+                square_idx = get_square_index(move)
 
-                samples.append({
-                    "fen": fen_before,
-                    "move": move_str,
-                    "move_idx": move_idx
-                })
-            else:
-                board.push(move)
+                if piece_idx is not None:
+                    samples.append({
+                        "fen": fen_before,
+                        "piece_label": piece_idx,
+                        "square_label": square_idx
+                    })
 
+            board.push(move)
             node = next_node
 
-# Save training samples
-with open(output_jsonl_path, "w", encoding="utf-8") as out_file:
+# Save to JSONL
+with open(output_jsonl_path, "w", encoding="utf-8") as f:
     for sample in samples:
-        json.dump(sample, out_file)
-        out_file.write("\n")
+        json.dump(sample, f)
+        f.write("\n")
 
-print(f"Saved {len(samples)} training samples to {output_jsonl_path}")
-print(f"Using move vocabulary of size {len(move_vocab)}")
+print(f"Saved {len(samples)} samples to {output_jsonl_path}")

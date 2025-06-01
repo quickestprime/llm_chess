@@ -15,7 +15,7 @@ model = DistilBertForSequenceClassification.from_pretrained(str(model_dir), loca
 print("Loaded model.")
 
 
-stockfish_elo = 400
+stockfish_elo = 1
 stockfish = Stockfish()
 stockfish.set_elo_rating(stockfish_elo)  # Set Stockfish elo here
 print(f"Loaded stockfish and set ELO to {stockfish_elo}.")

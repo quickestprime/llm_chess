@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import chess
 import torch
-from transformers import BertForSequenceClassification, BertTokenizerFast
+from transformers import DistilBertTokenizerFast, DistilBertForSequenceClassification
 import json
 
 app = FastAPI()

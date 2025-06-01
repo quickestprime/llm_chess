@@ -2,27 +2,39 @@
 <html>
 <head>
   <title>Play MagnusBot</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/1.0.0/chess.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css" />
   <style>
-    body { padding: 30px; font-family: sans-serif; }
-    #board { width: 400px; margin: auto; }
+    body {
+      padding: 30px;
+      font-family: sans-serif;
+    }
+    #board {
+      width: 400px;
+      margin: auto;
+    }
   </style>
 </head>
 <body>
-  <h2 align="center">Play against MagnusBot (BERT)</h2>
+  <h2 style="text-align: center;">Play against MagnusBot (BERT)</h2>
   <div id="board"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@0.13.0/chess.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+
   <script>
+    const game = new Chess();
+
     const board = Chessboard('board', {
       draggable: true,
       position: 'start',
-      onDrop: async (source, target, piece, newPos, oldPos, orientation) => {
+      onDrop: async (source, target) => {
+        // Attempt the user's move
         const move = game.move({ from: source, to: target, promotion: 'q' });
         if (move === null) return 'snapback';
 
         board.position(game.fen());
 
+        // Request bot move from backend
         const response = await fetch('/move', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -38,8 +50,6 @@
         }
       }
     });
-
-    const game = new Chess();
   </script>
 </body>
 </html>
